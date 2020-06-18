@@ -13,25 +13,20 @@
 #define FAIL -1
 #define SUCCESS 0
 
-typedef struct movieType
-{
-    std::string name;
-    std::vector<int> characteristics;
-}movieType;
-
 typedef struct userMovieRank
 {
     std::string movie;
-    int rank;
+    double rank;
 }userMovieRank;
 
 class RecommenderSystem
 {
 private:
-    std::vector<movieType> movies;
-    std::unordered_map<std::string, std::vector<userMovieRank>> userRank;
-    int readMovies(char const* moviesAttributesFilePath);
-    int readUserRanks(char const* userRanksFilePath);
+    std::unordered_map<std::string, std::vector<double>> _moviesChar;
+    std::unordered_map<std::string, std::vector<userMovieRank>> _userRank;
+    int _readMovies(char const* moviesAttributesFilePath);
+    int _readUserRanks(char const* userRanksFilePath);
+    std::string _getContentRecommendation(const std::string name);
 public:
     int loadData(char const* moviesAttributesFilePath, char const* userRanksFilePath);
 };
