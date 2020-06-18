@@ -6,6 +6,7 @@
 #define CPP4_RECOMMENDERSYSTEM_H
 
 #include <unordered_map>
+#include <map>
 #include <vector>
 #include <unordered_set>
 #include <string>

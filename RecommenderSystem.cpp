@@ -276,7 +276,7 @@ static bool sortBySimilarity(const std::pair<std::string, double> &a,
     return (a.second < b.second);
 }
 
-static std::unordered_map<std::string, double> sortByValue(std::unordered_map<std::string, double> m)
+static std::map<std::string, double> sortByValue(std::unordered_map<std::string, double> m)
 {
     std::vector<std::pair<std::string, double>> mapVector;
     // Insert entries
@@ -287,7 +287,7 @@ static std::unordered_map<std::string, double> sortByValue(std::unordered_map<st
     sort(mapVector.begin(), mapVector.end(), sortBySimilarity);
 
     // back to map
-    std::unordered_map<std::string, double> sortedValues = {};
+    std::map<std::string, double> sortedValues = {};
     for (auto iterator = mapVector.begin(); iterator != mapVector.end(); iterator++)
     {
         sortedValues.insert({iterator->first, iterator->second});
