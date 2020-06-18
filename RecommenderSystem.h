@@ -26,9 +26,10 @@ private:
     std::unordered_map<std::string, std::vector<userMovieRank>> _userRank;
     int _readMovies(char const* moviesAttributesFilePath);
     int _readUserRanks(char const* userRanksFilePath);
-    std::string _getContentRecommendation(const std::string name);
+    std::string _getContentRecommendation(const std::string &name);
 public:
     int loadData(char const* moviesAttributesFilePath, char const* userRanksFilePath);
+    std::string recommendByContent(const std::string &userName);
 };
 
 
