@@ -276,10 +276,31 @@ static bool sortBySimilarity(const std::pair<std::string, double> &a,
     return (a.second < b.second);
 }
 
+static std::unordered_map<std::string, double> sortByValue(std::unordered_map<std::string, double> m)
+{
+    std::vector<std::pair<std::string, double>> mapVector;
+    // Insert entries
+    for (auto iterator = m.begin(); iterator != m.end(); iterator++)
+    {
+            mapVector.emplace_back(*iterator);
+    }
+    sort(mapVector.begin(), mapVector.end(), sortBySimilarity);
+
+    // back to map
+    std::unordered_map<std::string, double> sortedValues = {};
+    for (auto iterator = mapVector.begin(); iterator != mapVector.end(); iterator++)
+    {
+        sortedValues.insert({iterator->first, iterator->second});
+    }
+
+    return sortedValues;
+}
+
 static std::unordered_map<std::string, double> getKlargest(std::unordered_map<std::string, double> similarity, int k)
 {
     std::unordered_map<std::string, double> kBiggest = {};
-    std::sort(similarity.begin(), similarity.end(), sortBySimilarity);
+    similarity = sortByValue(similarity);
+    //std::sort(similarity.begin(), similarity.end(), sortBySimilarity);
 
     // might have problem with the numbers
     int iterations = 0;
