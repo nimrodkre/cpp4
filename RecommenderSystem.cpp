@@ -149,6 +149,12 @@ static double normal(const std::vector<double> &vec)
     return std::sqrt(sum);
 }
 
+static double getSimilarity(const std::vector<double> &vec1, const std::vector<double> &vec2)
+{
+    double curVal = dotProduct(vec1, vec2);
+    curVal /= (normal(vec1) * normal(vec2));
+    return curVal;
+}
 
 static std::vector<userMovieRank> &normalizeUser(std::vector<userMovieRank> &userRank)
 {
@@ -217,8 +223,8 @@ std::string getMovieRecommended(const std::vector<double> &userPref,
     {
         if (it->rank == NA_VALUE)
         {
-            double curVal = dotProduct(userPref, movies[it->movie]);
-            curVal /= (normal(userPref) * normal(movies[it->movie]));
+            double curVal = getSimilarity(userPref, movies[it->movie]);
+
             if (curVal > maxVal)
             {
                 maxVal = curVal;
