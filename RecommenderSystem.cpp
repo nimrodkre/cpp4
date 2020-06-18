@@ -8,12 +8,13 @@
 #include <string>
 #include <fstream>
 #include <istream>
+#include <limits>
 
 #define BAD_FILE "Unable to open file "
 #define NA "NA"
-#define NA_VALUE -1
+#define NA_VALUE INT32_MAX
 
-int RecommenderSystem::loadData(char const* moviesAttributesFilePath, char const* userRanksFilePath)
+int RecommenderSystem::loadData(char const *moviesAttributesFilePath, char const *userRanksFilePath)
 {
     if (_readMovies(moviesAttributesFilePath) == FAIL)
     {
@@ -30,7 +31,7 @@ int RecommenderSystem::loadData(char const* moviesAttributesFilePath, char const
     return SUCCESS;
 }
 
-int RecommenderSystem::_readMovies(char const* moviesAttributesFilePath)
+int RecommenderSystem::_readMovies(char const *moviesAttributesFilePath)
 {
     std::ifstream fs(moviesAttributesFilePath);
     fs = std::ifstream(moviesAttributesFilePath);
@@ -52,8 +53,7 @@ int RecommenderSystem::_readMovies(char const* moviesAttributesFilePath)
             if (iteration == 0)
             {
                 movieName = s;
-            }
-            else
+            } else
             {
                 characteristics.push_back(atof(s.c_str()));
             }
@@ -80,7 +80,7 @@ static std::vector<std::string> getMovies(std::ifstream &fs)
     return movieList;
 }
 
-int RecommenderSystem::_readUserRanks(char const* userRanksFilePath)
+int RecommenderSystem::_readUserRanks(char const *userRanksFilePath)
 {
     std::ifstream fs(userRanksFilePath);
     fs = std::ifstream(userRanksFilePath);
@@ -104,16 +104,14 @@ int RecommenderSystem::_readUserRanks(char const* userRanksFilePath)
             if (iteration == 0)
             {
                 name = s;
-            }
-            else
+            } else
             {
                 userMovieRank movieRank;
                 movieRank.movie = movieList[iteration - 1];
                 if (s == NA)
                 {
                     movieRank.rank = NA_VALUE;
-                }
-                else
+                } else
                 {
                     movieRank.rank = atof(s.c_str());
                 }
@@ -127,11 +125,11 @@ int RecommenderSystem::_readUserRanks(char const* userRanksFilePath)
     return SUCCESS;
 }
 
-static std::vector<userMovieRank> &step1RecommendContent(std::vector<userMovieRank> &userRank)
+static std::vector<userMovieRank> &normalizeUser(std::vector<userMovieRank> &userRank)
 {
     int sum = 0;
     int num = 0;
-    for(auto it = userRank.begin(); it != userRank.end(); it++)
+    for (auto it = userRank.begin(); it != userRank.end(); it++)
     {
         if (it->rank != NA_VALUE)
         {
@@ -139,8 +137,23 @@ static std::vector<userMovieRank> &step1RecommendContent(std::vector<userMovieRa
         }
         num++;
     }
-    double avg = (double)sum / num;
-    for(auto it = userRank.begin(); it != userRank.end(); it++)
+    double avg = (double) sum / num;
+    for (auto it = userRank.begin(); it != userRank.end(); it++)
+    {
+        if (it->rank != NA_VALUE)
+        {
+            it->rank -= avg;
+        }
+    }
+    return userRank;
+}
+
+static std::vector<double>
+getUserPreference(std::vector<userMovieRank> &userRank, std::unordered_map<std::string, std::vector<double>> movies)
+{
+    // holds the vectors after multiplied by the scalar of the rank
+    std::vector<std::vector<double>> userPref;
+    for (auto it = userRank.begin(); it != userRank.end(); it++)
     {
         if (it->rank != NA_VALUE)
         {
@@ -151,8 +164,8 @@ static std::vector<userMovieRank> &step1RecommendContent(std::vector<userMovieRa
 
 std::string RecommenderSystem::_getContentRecommendation(const std::string name)
 {
-    std::unordered_map<std::string, std::vector<double>>movies = _moviesChar;
+    std::unordered_map<std::string, std::vector<double>> movies = _moviesChar;
     std::vector<userMovieRank> userRank = _userRank[name];
 
-    userRank = step1RecommendContent(userRank);
+    userRank = normalizeUser(userRank);
 }
