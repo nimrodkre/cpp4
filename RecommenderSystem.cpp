@@ -246,7 +246,6 @@ std::string RecommenderSystem::_getContentRecommendation(const std::string &name
     return getMovieRecommended(userPref, movies, userRank);
 }
 
-
 std::string RecommenderSystem::recommendByContent(const std::string &userName)
 {
     if (_userRank.find(userName) == _userRank.end())
@@ -254,4 +253,23 @@ std::string RecommenderSystem::recommendByContent(const std::string &userName)
         return NO_USER;
     }
     return _getContentRecommendation(userName);
+}
+
+std::unordered_map<std::string, double> RecommenderSystem::_getMoviesSimilarity(std::string &movieName, std::string name)
+{
+    std::vector<userMovieRank> userRank = _userRank[name];
+    std::unordered_map<std::string, double> similarity = {};
+    for (auto it = userRank.begin(); it != userRank.end(); it++)
+    {
+        if (it->rank != NA_VALUE)
+        {
+            similarity.insert({it->movie, getSimilarity(_moviesChar[it->movie], _moviesChar[movieName])});
+        }
+    }
+    return similarity;
+}
+
+static double _predictMovieScoreForUser(std::string &movieName, std::string &userName, const int k)
+{
+    std::unordered_map<std::string, double> movieSimilarity;
 }

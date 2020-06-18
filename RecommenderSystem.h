@@ -27,6 +27,7 @@ private:
     int _readMovies(char const* moviesAttributesFilePath);
     int _readUserRanks(char const* userRanksFilePath);
     std::string _getContentRecommendation(const std::string &name);
+    std::unordered_map<std::string, double> _getMoviesSimilarity(std::string &movieName, std::string name);
 public:
     int loadData(char const* moviesAttributesFilePath, char const* userRanksFilePath);
     std::string recommendByContent(const std::string &userName);
