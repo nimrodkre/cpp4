@@ -8,13 +8,14 @@
 #include <string>
 #include <fstream>
 #include <istream>
-#include <limits>
+#include <algorithm>
 #include <cmath>
 
 #define BAD_FILE "Unable to open file "
 #define NA "NA"
 #define NO_USER "USER NOT FOUND"
 #define NA_VALUE INT32_MAX
+#define FAIL -1
 
 int RecommenderSystem::loadData(char const *moviesAttributesFilePath, char const *userRanksFilePath)
 {
@@ -269,7 +270,66 @@ std::unordered_map<std::string, double> RecommenderSystem::_getMoviesSimilarity(
     return similarity;
 }
 
-static double _predictMovieScoreForUser(std::string &movieName, std::string &userName, const int k)
+static bool sortBySimilarity(const std::pair<std::string, double> &a,
+                             const std::pair<std::string, double> &b)
 {
-    std::unordered_map<std::string, double> movieSimilarity;
+    return (a.second < b.second);
+}
+
+static std::unordered_map<std::string, double> getKlargest(std::unordered_map<std::string, double> similarity, int k)
+{
+    std::unordered_map<std::string, double> kBiggest = {};
+    std::sort(similarity.begin(), similarity.end(), sortBySimilarity);
+
+    // might have problem with the numbers
+    int iterations = 0;
+    for (auto it = similarity.begin(); it != similarity.end(); it++)
+    {
+        if (iterations < similarity.size() - k)
+        {
+            continue;
+        }
+        else
+        {
+            kBiggest.insert({it->first, it->second});
+        }
+    }
+    return kBiggest;
+}
+
+double RecommenderSystem::_movieScore(std::unordered_map<std::string, double> kLargest, std::string &name)
+{
+    double numerator = 0;
+    double denominator = 0;
+    for (auto it = kLargest.begin(); it != kLargest.end(); it++)
+    {
+        // find movie rank of the user
+        int i = 0;
+        for (i = 0; i < _userRank[name].size(); i++)
+        {
+            if (it->first == _userRank[name][i].movie)
+            {
+                break;
+            }
+        }
+        numerator += it->second * _userRank[name][i].rank;
+        denominator += it->second;
+    }
+    return numerator / denominator;
+}
+
+double RecommenderSystem::_predictMovieScoreForUser(std::string &movieName, std::string &userName, const int k)
+{
+    std::unordered_map<std::string, double> movieSimilarity = _getMoviesSimilarity(movieName, userName);
+    movieSimilarity = getKlargest(movieSimilarity, k);
+    return _movieScore(movieSimilarity, userName);
+}
+
+double RecommenderSystem::predictMovieScoreForUser(std::string movieName, std::string userName, const int k)
+{
+    if (_userRank.find(userName) == _userRank.end() || _moviesChar.find(movieName) == _moviesChar.end())
+    {
+        return FAIL;
+    }
+    return _predictMovieScoreForUser(movieName, userName, k);
 }
