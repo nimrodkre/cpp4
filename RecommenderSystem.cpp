@@ -1,6 +1,20 @@
-//
-// Created by User on 18/06/2020.
-//
+/**
+ * @file RecommenderSystem.cpp
+ * @author  Nimrod Kremer
+ * @version 1.0
+ * @date 26.5.2020
+ *
+ * @brief In charge of the recommendation system
+ *
+ * @section LICENSE
+ * This program is not a free software; bla bla bla...
+ *
+ * @section DESCRIPTION
+ * In charge of recommendation algorithm
+ * Input  : user data for recommendation
+ * Process: independant functions
+ * Output : Notification.
+ */
 
 #include "RecommenderSystem.h"
 #include <iostream>
@@ -11,12 +25,33 @@
 #include <algorithm>
 #include <cmath>
 
+/**
+ * when a file is bad and not able to open correctly
+ */
 #define BAD_FILE "Unable to open file "
+/**
+ * How NA looks in the file
+ */
 #define NA "NA"
+/**
+ * The message to give the user if the user wasn't found
+ */
 #define NO_USER "USER NOT FOUND"
+/**
+ * The value to give the number if it's NA
+ */
 #define NA_VALUE INT32_MAX
+/**
+ * what to return when the funtion failed
+ */
 #define FAIL -1
 
+/**
+ * in charge of loading user data
+ * @param moviesAttributesFilePath
+ * @param userRanksFilePath
+ * @return
+ */
 int RecommenderSystem::loadData(char const *moviesAttributesFilePath, char const *userRanksFilePath)
 {
     if (_readMovies(moviesAttributesFilePath) == FAIL)
@@ -34,6 +69,11 @@ int RecommenderSystem::loadData(char const *moviesAttributesFilePath, char const
     return SUCCESS;
 }
 
+/**
+ * Reads the given movie paths to our data structure
+ * @param moviesAttributesFilePath path to the file
+ * @return fail to success
+ */
 int RecommenderSystem::_readMovies(char const *moviesAttributesFilePath)
 {
     std::ifstream fs(moviesAttributesFilePath);
@@ -68,6 +108,11 @@ int RecommenderSystem::_readMovies(char const *moviesAttributesFilePath)
     return SUCCESS;
 }
 
+/**
+ * builds a vector with all of the movies from the given stream
+ * @param fs stream of data from file
+ * @return vector with all of the movies
+ */
 static std::vector<std::string> getMovies(std::ifstream &fs)
 {
     std::string line;
@@ -83,6 +128,11 @@ static std::vector<std::string> getMovies(std::ifstream &fs)
     return movieList;
 }
 
+/**
+ * reads the users ranks from the given file path
+ * @param userRanksFilePath the path to the file
+ * @return success or fail
+ */
 int RecommenderSystem::_readUserRanks(char const *userRanksFilePath)
 {
     std::ifstream fs(userRanksFilePath);
@@ -128,6 +178,12 @@ int RecommenderSystem::_readUserRanks(char const *userRanksFilePath)
     return SUCCESS;
 }
 
+/**
+ * dot product of the given vectors
+ * @param vec1 vector 1
+ * @param vec2 vector 2
+ * @return the dot product of both
+ */
 static double dotProduct(const std::vector<double> &vec1, const std::vector<double> &vec2)
 {
     double sum = 0;
@@ -139,6 +195,11 @@ static double dotProduct(const std::vector<double> &vec1, const std::vector<doub
     return sum;
 }
 
+/**
+ * calculates the normal of the given vector
+ * @param vec the vector to normalize
+ * @return the normal of the vector
+ */
 static double normal(const std::vector<double> &vec)
 {
     double sum = 0;
@@ -150,6 +211,12 @@ static double normal(const std::vector<double> &vec)
     return std::sqrt(sum);
 }
 
+/**
+ * calculates the similarity of the 2 vectors according to the equation given
+ * @param vec1 the first vector
+ * @param vec2 the second vector
+ * @return the similarity
+ */
 static double getSimilarity(const std::vector<double> &vec1, const std::vector<double> &vec2)
 {
     double curVal = dotProduct(vec1, vec2);
@@ -157,6 +224,11 @@ static double getSimilarity(const std::vector<double> &vec1, const std::vector<d
     return curVal;
 }
 
+/**
+ * normalizes all of the users ranks, according the first step of the given algorithm in 3.2
+ * @param userRank the users ranks
+ * @return new vector with the given ranks
+ */
 static std::vector<userMovieRank> &normalizeUser(std::vector<userMovieRank> &userRank)
 {
     int sum = 0;
@@ -180,6 +252,12 @@ static std::vector<userMovieRank> &normalizeUser(std::vector<userMovieRank> &use
     return userRank;
 }
 
+/**
+ * calculates users preference
+ * @param userRank the users ranks
+ * @param movies the movies
+ * @return all of the users preferences
+ */
 static std::vector<double>
 getUserPreference(std::vector<userMovieRank> &userRank, std::map<std::string, std::vector<double>> movies)
 {
@@ -214,7 +292,14 @@ getUserPreference(std::vector<userMovieRank> &userRank, std::map<std::string, st
     return retPref;
 }
 
-std::string getMovieRecommended(const std::vector<double> &userPref,
+/**
+ * finds the recommended movies for the user from the given data
+ * @param userPref the users preferences
+ * @param movies the movies
+ * @param userRank the ranks of the user
+ * @return the movie recommended
+ */
+static std::string getMovieRecommended(const std::vector<double> &userPref,
         std::map<std::string, std::vector<double>> &movies,
         const std::vector<userMovieRank> &userRank)
 {
@@ -237,6 +322,11 @@ std::string getMovieRecommended(const std::vector<double> &userPref,
     return bestMovie;
 }
 
+/**
+ * finds the content best suited for the user
+ * @param name the name of the user
+ * @return the movie best fit for the given user
+ */
 std::string RecommenderSystem::_getContentRecommendation(const std::string &name)
 {
     std::map<std::string, std::vector<double>> movies = _moviesChar;
@@ -247,6 +337,11 @@ std::string RecommenderSystem::_getContentRecommendation(const std::string &name
     return getMovieRecommended(userPref, movies, userRank);
 }
 
+/**
+ * finds the recommended movie for the user
+ * @param userName the user name to check
+ * @return the movie recommneded
+ */
 std::string RecommenderSystem::recommendByContent(const std::string &userName)
 {
     if (_userRank.find(userName) == _userRank.end())
@@ -256,6 +351,12 @@ std::string RecommenderSystem::recommendByContent(const std::string &userName)
     return _getContentRecommendation(userName);
 }
 
+/**
+ * finds the movies most similiar for the user and the movie
+ * @param movieName the movie to check
+ * @param name the user
+ * @return a map with the movie and similarity to the given movie name
+ */
 std::map<std::string, double> RecommenderSystem::_getMoviesSimilarity(std::string &movieName, std::string name)
 {
     std::vector<userMovieRank> userRank = _userRank[name];
@@ -270,12 +371,23 @@ std::map<std::string, double> RecommenderSystem::_getMoviesSimilarity(std::strin
     return similarity;
 }
 
+/**
+ * function to help our sort
+ * @param a first pair
+ * @param b second pair
+ * @return how to sort them
+ */
 static bool sortBySimilarity(const std::pair<std::string, double> &a,
                              const std::pair<std::string, double> &b)
 {
     return (a.second < b.second);
 }
 
+/**
+ * sorts the given map by value
+ * @param m the map to sort
+ * @return a vector with pairs after we sorted
+ */
 static std::vector<std::pair<std::string, double>> sortByValue(std::map<std::string, double> m)
 {
     std::vector<std::pair<std::string, double>> mapVector;
@@ -289,14 +401,18 @@ static std::vector<std::pair<std::string, double>> sortByValue(std::map<std::str
     return mapVector;
 }
 
+/**
+ * finds the k largest values in the given map
+ * @param similarity the map to find the k biggest values
+ * @param k the number of k biggest
+ * @return the map with k biggest
+ */
 static std::map<std::string, double> getKlargest(std::map<std::string, double> similarity, int k)
 {
     std::vector<std::pair<std::string, double>> sim;
     std::map<std::string, double> kBiggest = {};
     sim = sortByValue(similarity);
-    //std::sort(similarity.begin(), similarity.end(), sortBySimilarity);
 
-    // might have problem with the numbers
     int iterations = 0;
     for (auto it = sim.begin(); it != sim.end(); it++)
     {
@@ -309,6 +425,12 @@ static std::map<std::string, double> getKlargest(std::map<std::string, double> s
     return kBiggest;
 }
 
+/**
+ * finds the score of the movie according to the algorithm of the targil
+ * @param kLargest k movies to check with
+ * @param name name of the suer
+ * @return double with the score of the movie
+ */
 double RecommenderSystem::_movieScore(std::map<std::string, double> kLargest, std::string &name)
 {
     double numerator = 0;
@@ -330,6 +452,13 @@ double RecommenderSystem::_movieScore(std::map<std::string, double> kLargest, st
     return numerator / denominator;
 }
 
+/**
+ * predicts the movie score for the user
+ * @param movieName the movie name
+ * @param userName the name of the user
+ * @param k number of movie to check with
+ * @return the score given
+ */
 double RecommenderSystem::_predictMovieScoreForUser(std::string &movieName, std::string &userName, const int k)
 {
     std::map<std::string, double> movieSimilarity = _getMoviesSimilarity(movieName, userName);
@@ -337,6 +466,13 @@ double RecommenderSystem::_predictMovieScoreForUser(std::string &movieName, std:
     return _movieScore(movieSimilarity, userName);
 }
 
+/**
+ * predicts the movie score for the user
+ * @param movieName the movie name
+ * @param userName the name of the user
+ * @param k number of movie to check with
+ * @return the score given
+ */
 double RecommenderSystem::predictMovieScoreForUser(std::string movieName, std::string userName, const int k)
 {
     if (_userRank.find(userName) == _userRank.end() || _moviesChar.find(movieName) == _moviesChar.end())
@@ -346,7 +482,12 @@ double RecommenderSystem::predictMovieScoreForUser(std::string movieName, std::s
     return _predictMovieScoreForUser(movieName, userName, k);
 }
 
-
+/**
+ * finds the recommended movie according to the CH algorithm
+ * @param userName the user name of the wanted person who wants recommendation
+ * @param k k movie to check withthe movie recommended
+ * @return the movie recommended
+ */
 std::string RecommenderSystem::recommendByCF(std::string userName, int k)
 {
     if (_userRank.find(userName) == _userRank.end())
