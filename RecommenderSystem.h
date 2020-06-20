@@ -43,6 +43,9 @@ typedef struct userMovieRank
     double rank;
 }userMovieRank;
 
+/**
+ * class in charge of the recommendation system
+ */
 class RecommenderSystem
 {
 private:
@@ -102,7 +105,7 @@ public:
      * @param userRanksFilePath
      * @return
      */
-    int loadData(char const* moviesAttributesFilePath, char const* userRanksFilePath);
+    int loadData(std::string moviesAttributesFilePath, std::string userRanksFilePath);
     /**
      * finds the recommended movie for the user
      * @param userName the user name to check

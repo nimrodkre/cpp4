@@ -52,15 +52,15 @@
  * @param userRanksFilePath
  * @return
  */
-int RecommenderSystem::loadData(char const *moviesAttributesFilePath, char const *userRanksFilePath)
+int RecommenderSystem::loadData(std::string moviesAttributesFilePath, std::string userRanksFilePath)
 {
-    if (_readMovies(moviesAttributesFilePath) == FAIL)
+    if (_readMovies(moviesAttributesFilePath.c_str()) == FAIL)
     {
         std::cerr << BAD_FILE << moviesAttributesFilePath << std::endl;
         return FAIL;
     }
 
-    if (_readUserRanks(userRanksFilePath) == FAIL)
+    if (_readUserRanks(userRanksFilePath.c_str()) == FAIL)
     {
         std::cerr << BAD_FILE << userRanksFilePath << std::endl;
         return FAIL;
@@ -91,12 +91,13 @@ int RecommenderSystem::_readMovies(char const *moviesAttributesFilePath)
         int iteration = 0;
         std::string movieName;
         std::vector<double> characteristics;
-        for (std::string s; iss >> s;)
+        for (std::string s; iss >> s; )
         {
             if (iteration == 0)
             {
                 movieName = s;
-            } else
+            }
+            else
             {
                 characteristics.push_back(atof(s.c_str()));
             }
@@ -120,7 +121,7 @@ static std::vector<std::string> getMovies(std::ifstream &fs)
     std::getline(fs, line);
     std::istringstream iss(line);
 
-    for (std::string s; iss >> s;)
+    for (std::string s; iss >> s; )
     {
         movieList.push_back(s);
     }
@@ -152,19 +153,21 @@ int RecommenderSystem::_readUserRanks(char const *userRanksFilePath)
         std::vector<userMovieRank> movieRanks;
         int iteration = 0;
         std::string name;
-        for (std::string s; iss >> s;)
+        for (std::string s; iss >> s; )
         {
             if (iteration == 0)
             {
                 name = s;
-            } else
+            }
+            else
             {
                 userMovieRank movieRank;
                 movieRank.movie = movieList[iteration - 1];
                 if (s == NA)
                 {
                     movieRank.rank = NA_VALUE;
-                } else
+                }
+                else
                 {
                     movieRank.rank = atof(s.c_str());
                 }
@@ -187,7 +190,7 @@ int RecommenderSystem::_readUserRanks(char const *userRanksFilePath)
 static double dotProduct(const std::vector<double> &vec1, const std::vector<double> &vec2)
 {
     double sum = 0;
-    for (int i = 0; i < vec1.size(); i++)
+    for (size_t i = 0; i < vec1.size(); i++)
     {
         sum += vec1[i] * vec2[i];
     }
@@ -203,7 +206,7 @@ static double dotProduct(const std::vector<double> &vec1, const std::vector<doub
 static double normal(const std::vector<double> &vec)
 {
     double sum = 0;
-    for (int i = 0; i < vec.size(); i++)
+    for (size_t i = 0; i < vec.size(); i++)
     {
         sum += vec[i] * vec[i];
     }
@@ -233,20 +236,20 @@ static std::vector<userMovieRank> &normalizeUser(std::vector<userMovieRank> &use
 {
     int sum = 0;
     int num = 0;
-    for (auto it = userRank.begin(); it != userRank.end(); it++)
+    for (auto &it: userRank)
     {
-        if (it->rank != NA_VALUE)
+        if (it.rank != NA_VALUE)
         {
-            sum += it->rank;
+            sum += it.rank;
             num++;
         }
     }
     double avg = (double) sum / num;
-    for (auto it = userRank.begin(); it != userRank.end(); it++)
+    for (auto &it: userRank)
     {
-        if (it->rank != NA_VALUE)
+        if (it.rank != NA_VALUE)
         {
-            it->rank -= avg;
+            it.rank -= avg;
         }
     }
     return userRank;
@@ -263,14 +266,14 @@ getUserPreference(std::vector<userMovieRank> &userRank, std::map<std::string, st
 {
     // holds the vectors after multiplied by the scalar of the rank
     std::vector<std::vector<double>> userPref;
-    for (auto it = userRank.begin(); it != userRank.end(); it++)
+    for (auto &it: userRank)
     {
-        if (it->rank != NA_VALUE)
+        if (it.rank != NA_VALUE)
         {
-            std::vector<double>pref = movies[it->movie];
-            for (int i = 0; i < pref.size(); i++)
+            std::vector<double>pref = movies[it.movie];
+            for (size_t i = 0; i < pref.size(); i++)
             {
-                pref[i] *= it->rank;
+                pref[i] *= it.rank;
             }
             userPref.push_back(pref);
         }
@@ -279,10 +282,10 @@ getUserPreference(std::vector<userMovieRank> &userRank, std::map<std::string, st
     // now add all vectors together in userPref
     std::vector<double> retPref;
     // at least 1 movie that the user likes
-    for (int i = 0; i < userPref[0].size(); i++)
+    for (size_t i = 0; i < userPref[0].size(); i++)
     {
         int num = 0;
-        for (int j = 0; j < userPref.size(); j++)
+        for (size_t j = 0; j < userPref.size(); j++)
         {
             num += userPref[j][i];
         }
@@ -300,21 +303,21 @@ getUserPreference(std::vector<userMovieRank> &userRank, std::map<std::string, st
  * @return the movie recommended
  */
 static std::string getMovieRecommended(const std::vector<double> &userPref,
-        std::map<std::string, std::vector<double>> &movies,
-        const std::vector<userMovieRank> &userRank)
+                                       std::map<std::string, std::vector<double>> &movies,
+                                       const std::vector<userMovieRank> &userRank)
 {
     double maxVal = INT8_MIN;
     std::string bestMovie;
-    for (auto it = userRank.begin(); it != userRank.end(); it++)
+    for (auto &it: userRank)
     {
-        if (it->rank == NA_VALUE)
+        if (it.rank == NA_VALUE)
         {
-            double curVal = getSimilarity(userPref, movies[it->movie]);
+            double curVal = getSimilarity(userPref, movies[it.movie]);
 
             if (curVal > maxVal)
             {
                 maxVal = curVal;
-                bestMovie = it->movie;
+                bestMovie = it.movie;
             }
         }
     }
@@ -361,11 +364,11 @@ std::map<std::string, double> RecommenderSystem::_getMoviesSimilarity(std::strin
 {
     std::vector<userMovieRank> userRank = _userRank[name];
     std::map<std::string, double> similarity = {};
-    for (auto it = userRank.begin(); it != userRank.end(); it++)
+    for (auto &it: userRank)
     {
-        if (it->rank != NA_VALUE)
+        if (it.rank != NA_VALUE && it.movie != movieName)
         {
-            similarity.insert({it->movie, getSimilarity(_moviesChar[it->movie], _moviesChar[movieName])});
+            similarity.insert({it.movie, getSimilarity(_moviesChar[it.movie], _moviesChar[movieName])});
         }
     }
     return similarity;
@@ -392,9 +395,9 @@ static std::vector<std::pair<std::string, double>> sortByValue(std::map<std::str
 {
     std::vector<std::pair<std::string, double>> mapVector;
     // Insert entries
-    for (auto iterator = m.begin(); iterator != m.end(); iterator++)
+    for (auto &iterator : m)
     {
-            mapVector.emplace_back(*iterator);
+            mapVector.emplace_back(iterator);
     }
     sort(mapVector.begin(), mapVector.end(), sortBySimilarity);
 
@@ -413,7 +416,7 @@ static std::map<std::string, double> getKlargest(std::map<std::string, double> s
     std::map<std::string, double> kBiggest = {};
     sim = sortByValue(similarity);
 
-    int iterations = 0;
+    size_t iterations = 0;
     for (auto it = sim.begin(); it != sim.end(); it++)
     {
         if (iterations >= sim.size() - k)
@@ -435,19 +438,19 @@ double RecommenderSystem::_movieScore(std::map<std::string, double> kLargest, st
 {
     double numerator = 0;
     double denominator = 0;
-    for (auto it = kLargest.begin(); it != kLargest.end(); it++)
+    for (auto &it : kLargest)
     {
         // find movie rank of the user
-        int i = 0;
+        size_t i = 0;
         for (i = 0; i < _userRank[name].size(); i++)
         {
-            if (it->first == _userRank[name][i].movie)
+            if (it.first == _userRank[name][i].movie)
             {
                 break;
             }
         }
-        numerator += it->second * _userRank[name][i].rank;
-        denominator += it->second;
+        numerator += it.second * _userRank[name][i].rank;
+        denominator += it.second;
     }
     return numerator / denominator;
 }
@@ -496,18 +499,20 @@ std::string RecommenderSystem::recommendByCF(std::string userName, int k)
     }
 
     std::string bestMovie;
-    int bestMovieScore = INT8_MIN;
-    for (int i = 0; i < _userRank[userName].size(); i++)
+    double bestMovieScore = INT8_MIN;
+    for (size_t i = 0; i < _userRank[userName].size(); i++)
     {
         if (_userRank[userName][i].rank == NA_VALUE)
         {
-            int score = predictMovieScoreForUser(_userRank[userName][i].movie, userName, k);
-            if (score > bestMovieScore)
+            double score = predictMovieScoreForUser(_userRank[userName][i].movie, userName, k);
+            if (score != FAIL && score > bestMovieScore)
             {
                 bestMovie = _userRank[userName][i].movie;
                 bestMovieScore = score;
             }
         }
+
     }
+    std::cout << bestMovieScore << std::endl;
     return bestMovie;
 }
