@@ -4,9 +4,11 @@
 int main()
 {
     RecommenderSystem r;
-    r.loadData("C:\\HUJI computer projects\\huji_C\\cpp4\\movies_big.txt","C:\\HUJI computer projects\\huji_C\\cpp4\\ranks_big.txt");
-    //std::string a = r.recommendByContent("Melody");
-    //std::cout << a << std::endl;
+    std::string movies = "C:\\Users\\User\\Downloads\\Ex5 files-20200622\\movies_big.txt";
+    std::string movies2 = "C:\\Users\\User\\Downloads\\Ex5 files-20200622\\ranks_big.txt";
+    r.loadData(movies,movies2);
+//    std::string a = r.recommendByContent("Reina");
+//    std::cout << a << std::endl;
     //double b = r.predictMovieScoreForUser("Twilight", "Melody", 2);
     //std::cout << b << std::endl;
     //double b = r.predictMovieScoreForUser("DeepRed", "Christopher", 30);

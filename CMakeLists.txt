@@ -3,4 +3,4 @@ project(cpp4)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(cpp4 main.cpp RecommenderSystem.cpp RecommenderSystem.h)
+add_executable(cpp4 main.cpp RecommenderSystem.cpp)

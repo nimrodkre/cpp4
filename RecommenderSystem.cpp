@@ -208,7 +208,7 @@ static double normal(const std::vector<double> &vec)
     double sum = 0;
     for (size_t i = 0; i < vec.size(); i++)
     {
-        sum += vec[i] * vec[i];
+        sum += std::pow(vec[i], 2);
     }
 
     return std::sqrt(sum);
@@ -234,7 +234,7 @@ static double getSimilarity(const std::vector<double> &vec1, const std::vector<d
  */
 static std::vector<userMovieRank> &normalizeUser(std::vector<userMovieRank> &userRank)
 {
-    int sum = 0;
+    double sum = 0;
     int num = 0;
     for (auto &it: userRank)
     {
@@ -244,7 +244,7 @@ static std::vector<userMovieRank> &normalizeUser(std::vector<userMovieRank> &use
             num++;
         }
     }
-    double avg = (double) sum / num;
+    double avg =  sum / num;
     for (auto &it: userRank)
     {
         if (it.rank != NA_VALUE)
@@ -284,7 +284,7 @@ getUserPreference(std::vector<userMovieRank> &userRank, std::map<std::string, st
     // at least 1 movie that the user likes
     for (size_t i = 0; i < userPref[0].size(); i++)
     {
-        int num = 0;
+        double num = 0;
         for (size_t j = 0; j < userPref.size(); j++)
         {
             num += userPref[j][i];
@@ -313,7 +313,6 @@ static std::string getMovieRecommended(const std::vector<double> &userPref,
         if (it.rank == NA_VALUE)
         {
             double curVal = getSimilarity(userPref, movies[it.movie]);
-
             if (curVal > maxVal)
             {
                 maxVal = curVal;
@@ -351,6 +350,7 @@ std::string RecommenderSystem::recommendByContent(const std::string &userName)
     {
         return NO_USER;
     }
+
     return _getContentRecommendation(userName);
 }
 
@@ -391,7 +391,7 @@ static bool sortBySimilarity(const std::pair<std::string, double> &a,
  * @param m the map to sort
  * @return a vector with pairs after we sorted
  */
-static std::vector<std::pair<std::string, double>> sortByValue(std::map<std::string, double> m)
+static std::vector<std::pair<std::string, double>> sortByValue(const std::map<std::string, double> &m)
 {
     std::vector<std::pair<std::string, double>> mapVector;
     // Insert entries
@@ -410,7 +410,7 @@ static std::vector<std::pair<std::string, double>> sortByValue(std::map<std::str
  * @param k the number of k biggest
  * @return the map with k biggest
  */
-static std::map<std::string, double> getKlargest(std::map<std::string, double> similarity, int k)
+static std::map<std::string, double> getKlargest(std::map<std::string, double> &similarity, int k)
 {
     std::vector<std::pair<std::string, double>> sim;
     std::map<std::string, double> kBiggest = {};
@@ -513,6 +513,5 @@ std::string RecommenderSystem::recommendByCF(std::string userName, int k)
         }
 
     }
-    std::cout << bestMovieScore << std::endl;
     return bestMovie;
 }
