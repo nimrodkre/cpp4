@@ -366,11 +366,37 @@ std::unordered_map<std::string, double> RecommenderSystem::_getMoviesSimilarity(
 {
     std::vector<userMovieRank> userRank = _userRank[name];
     std::unordered_map<std::string, double> similarity = {};
+    auto res = _anglesBetweenMovies.find(movieName);
     for (auto &it: userRank)
     {
+        double angle = 0;
+
+        if (res == _anglesBetweenMovies.end())
+        {
+            angle = _getSimilarity(_moviesChar[it.movie], _moviesChar[movieName], movieName);
+            _anglesBetweenMovies[it.movie][movieName] =  angle;
+            _anglesBetweenMovies[movieName][it.movie] =  angle;
+        }
+        else
+        {
+            auto res2 = _anglesBetweenMovies[movieName].find(it.movie);
+            if (res2 == _anglesBetweenMovies[movieName].end())
+            {
+                angle = _getSimilarity(_moviesChar[it.movie], _moviesChar[movieName], movieName);
+                _anglesBetweenMovies[it.movie][movieName] =  angle;
+                _anglesBetweenMovies[movieName][it.movie] =  angle;
+            }
+            else
+            {
+                angle = _anglesBetweenMovies[it.movie][movieName];
+            }
+        }
+
+
         if (it.rank != NA_VALUE && it.movie != movieName)
         {
-            similarity.insert({it.movie, _getSimilarity(_moviesChar[it.movie], _moviesChar[movieName], movieName)});
+
+            similarity.insert({it.movie, angle});
         }
     }
     return similarity;

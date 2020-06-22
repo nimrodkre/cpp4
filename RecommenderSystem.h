@@ -62,6 +62,10 @@ private:
      */
     std::unordered_map<std::string, double> _movieNormal;
     /**
+     * holds map with all of the movies and the angles between them
+     */
+    std::unordered_map<std::string, std::unordered_map<std::string, double>> _anglesBetweenMovies;
+    /**
     * Reads the given movie paths to our data structure
     * @param moviesAttributesFilePath path to the file
     * @return fail to success
