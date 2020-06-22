@@ -175,11 +175,13 @@ int RecommenderSystem::_readUserRanks(char const *userRanksFilePath)
                 {
                     movieRank.rank = atof(s.c_str());
                 }
+                this->_userRankMap[name][movieRank.movie] = movieRank.rank;
                 movieRanks.push_back(movieRank);
             }
             iteration++;
         }
         this->_userRank.insert({name, movieRanks});
+
     }
     fs.close();
     return SUCCESS;
@@ -444,12 +446,14 @@ static std::unordered_map<std::string, double> getKlargest(std::unordered_map<st
     std::unordered_map<std::string, double> kBiggest = {};
     sim = sortByValue(similarity);
 
+
     size_t iterations = 0;
     for (auto it = sim.begin(); it != sim.end(); it++)
     {
         if (iterations >= sim.size() - k)
         {
             kBiggest.insert({it->first, it->second});
+
         }
         iterations++;
     }
@@ -462,23 +466,23 @@ static std::unordered_map<std::string, double> getKlargest(std::unordered_map<st
  * @param name name of the suer
  * @return double with the score of the movie
  */
-double RecommenderSystem::_movieScore(const std::unordered_map<std::string, double> &kLargest, const std::string &name)
+double RecommenderSystem::_movieScore(const std::unordered_map<std::string, double> &similarity, const std::string &name, int k)
 {
     double numerator = 0;
     double denominator = 0;
-    for (auto &it : kLargest)
+    size_t iterations = 0;
+    std::vector<std::pair<std::string, double>> sim;
+    sim = sortByValue(similarity);
+
+    for (auto &it : sim)
     {
-        // find movie rank of the user
-        size_t i = 0;
-        for (i = 0; i < _userRank[name].size(); i++)
+        if (iterations >= sim.size() - k)
         {
-            if (it.first == _userRank[name][i].movie)
-            {
-                break;
-            }
+            numerator += it.second * _userRankMap[name][it.first];
+            denominator += it.second;
         }
-        numerator += it.second * _userRank[name][i].rank;
-        denominator += it.second;
+
+        iterations++;
     }
     return numerator / denominator;
 }
@@ -493,8 +497,7 @@ double RecommenderSystem::_movieScore(const std::unordered_map<std::string, doub
 double RecommenderSystem::_predictMovieScoreForUser(std::string &movieName, std::string &userName, int k)
 {
     std::unordered_map<std::string, double> movieSimilarity = _getMoviesSimilarity(movieName, userName);
-    movieSimilarity = getKlargest(movieSimilarity, k);
-    return _movieScore(movieSimilarity, userName);
+    return _movieScore(movieSimilarity, userName, k);
 }
 
 /**

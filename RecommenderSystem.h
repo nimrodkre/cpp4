@@ -58,6 +58,10 @@ private:
      */
     std::unordered_map<std::string, std::vector<userMovieRank>> _userRank;
     /**
+     * unordered_map with name of the user and movie map to the movie. Gives better execution time in 1 function
+     */
+    std::unordered_map<std::string, std::map<std::string, double>> _userRankMap;
+    /**
      * holds map with all of the movies and their normal
      */
     std::unordered_map<std::string, double> _movieNormal;
@@ -97,14 +101,14 @@ private:
      * @param k number of movie to check with
      * @return the score given
      */
-    double _predictMovieScoreForUser(std::string &movieName, std::string &userName, const int k);
+    double _predictMovieScoreForUser(std::string &movieName, std::string &userName, int k);
     /**
      * finds the score of the movie according to the algorithm of the targil
      * @param kLargest k movies to check with
      * @param name name of the suer
      * @return double with the score of the movie
      */
-    double _movieScore(const std::unordered_map<std::string, double> &kLargest, const std::string &name);
+    double _movieScore(const std::unordered_map<std::string, double> &similarity, const std::string &name, int k);
     /**
     * calculates the similarity of the 2 vectors according to the equation given
     * @param vec1 the first vector
