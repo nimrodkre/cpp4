@@ -52,7 +52,7 @@
  * @param userRanksFilePath
  * @return
  */
-int RecommenderSystem::loadData(std::string moviesAttributesFilePath, std::string userRanksFilePath)
+int RecommenderSystem::loadData(const std::string &moviesAttributesFilePath, const std::string &userRanksFilePath)
 {
     if (_readMovies(moviesAttributesFilePath.c_str()) == FAIL)
     {
@@ -91,6 +91,7 @@ int RecommenderSystem::_readMovies(char const *moviesAttributesFilePath)
         int iteration = 0;
         std::string movieName;
         std::vector<double> characteristics;
+        double normal = 0;
         for (std::string s; iss >> s; )
         {
             if (iteration == 0)
@@ -99,13 +100,16 @@ int RecommenderSystem::_readMovies(char const *moviesAttributesFilePath)
             }
             else
             {
-                characteristics.push_back(atof(s.c_str()));
+                double num = atof(s.c_str());
+                normal += std::pow(num, 2);
+                characteristics.push_back(num);
             }
             iteration++;
         }
+        this->_movieNormal.insert({movieName, std::sqrt(normal)});
         this->_moviesChar.insert({movieName, characteristics});
     }
-
+    fs.close();
     return SUCCESS;
 }
 
@@ -177,7 +181,7 @@ int RecommenderSystem::_readUserRanks(char const *userRanksFilePath)
         }
         this->_userRank.insert({name, movieRanks});
     }
-
+    fs.close();
     return SUCCESS;
 }
 
@@ -197,7 +201,6 @@ static double dotProduct(const std::vector<double> &vec1, const std::vector<doub
 
     return sum;
 }
-
 /**
  * calculates the normal of the given vector
  * @param vec the vector to normalize
@@ -206,24 +209,23 @@ static double dotProduct(const std::vector<double> &vec1, const std::vector<doub
 static double normal(const std::vector<double> &vec)
 {
     double sum = 0;
-    for (size_t i = 0; i < vec.size(); i++)
+    for (auto num: vec)
     {
-        sum += std::pow(vec[i], 2);
+        sum += std::pow(num, 2);
     }
 
     return std::sqrt(sum);
 }
-
 /**
  * calculates the similarity of the 2 vectors according to the equation given
  * @param vec1 the first vector
  * @param vec2 the second vector
  * @return the similarity
  */
-static double getSimilarity(const std::vector<double> &vec1, const std::vector<double> &vec2)
+double RecommenderSystem::_getSimilarity(const std::vector<double> &vec1, const std::vector<double> &vec2, const std::string &movie)
 {
     double curVal = dotProduct(vec1, vec2);
-    curVal /= (normal(vec1) * normal(vec2));
+    curVal /= (normal(vec1) * _movieNormal[movie]);
     return curVal;
 }
 
@@ -262,7 +264,7 @@ static std::vector<userMovieRank> &normalizeUser(std::vector<userMovieRank> &use
  * @return all of the users preferences
  */
 static std::vector<double>
-getUserPreference(std::vector<userMovieRank> &userRank, std::map<std::string, std::vector<double>> movies)
+getUserPreference(std::vector<userMovieRank> &userRank, std::unordered_map<std::string, std::vector<double>> movies)
 {
     // holds the vectors after multiplied by the scalar of the rank
     std::vector<std::vector<double>> userPref;
@@ -285,9 +287,9 @@ getUserPreference(std::vector<userMovieRank> &userRank, std::map<std::string, st
     for (size_t i = 0; i < userPref[0].size(); i++)
     {
         double num = 0;
-        for (size_t j = 0; j < userPref.size(); j++)
+        for (auto pref: userPref)
         {
-            num += userPref[j][i];
+            num += pref[i];
         }
         retPref.push_back(num);
     }
@@ -302,9 +304,9 @@ getUserPreference(std::vector<userMovieRank> &userRank, std::map<std::string, st
  * @param userRank the ranks of the user
  * @return the movie recommended
  */
-static std::string getMovieRecommended(const std::vector<double> &userPref,
-                                       std::map<std::string, std::vector<double>> &movies,
-                                       const std::vector<userMovieRank> &userRank)
+std::string RecommenderSystem::_getMovieRecommended(const std::vector<double> &userPref,
+                                                    std::unordered_map<std::string, std::vector<double>> &movies,
+                                                    const std::vector<userMovieRank> &userRank)
 {
     double maxVal = INT8_MIN;
     std::string bestMovie;
@@ -312,7 +314,7 @@ static std::string getMovieRecommended(const std::vector<double> &userPref,
     {
         if (it.rank == NA_VALUE)
         {
-            double curVal = getSimilarity(userPref, movies[it.movie]);
+            double curVal = _getSimilarity(userPref, movies[it.movie], it.movie);
             if (curVal > maxVal)
             {
                 maxVal = curVal;
@@ -331,12 +333,12 @@ static std::string getMovieRecommended(const std::vector<double> &userPref,
  */
 std::string RecommenderSystem::_getContentRecommendation(const std::string &name)
 {
-    std::map<std::string, std::vector<double>> movies = _moviesChar;
+    std::unordered_map<std::string, std::vector<double>> movies = _moviesChar;
     std::vector<userMovieRank> userRank = _userRank[name];
 
     userRank = normalizeUser(userRank);
     std::vector<double> userPref = getUserPreference(userRank, movies);
-    return getMovieRecommended(userPref, movies, userRank);
+    return _getMovieRecommended(userPref, movies, userRank);
 }
 
 /**
@@ -358,17 +360,17 @@ std::string RecommenderSystem::recommendByContent(const std::string &userName)
  * finds the movies most similiar for the user and the movie
  * @param movieName the movie to check
  * @param name the user
- * @return a map with the movie and similarity to the given movie name
+ * @return a unordered_map with the movie and similarity to the given movie name
  */
-std::map<std::string, double> RecommenderSystem::_getMoviesSimilarity(std::string &movieName, std::string name)
+std::unordered_map<std::string, double> RecommenderSystem::_getMoviesSimilarity(const std::string &movieName, const std::string &name)
 {
     std::vector<userMovieRank> userRank = _userRank[name];
-    std::map<std::string, double> similarity = {};
+    std::unordered_map<std::string, double> similarity = {};
     for (auto &it: userRank)
     {
         if (it.rank != NA_VALUE && it.movie != movieName)
         {
-            similarity.insert({it.movie, getSimilarity(_moviesChar[it.movie], _moviesChar[movieName])});
+            similarity.insert({it.movie, _getSimilarity(_moviesChar[it.movie], _moviesChar[movieName], movieName)});
         }
     }
     return similarity;
@@ -387,33 +389,33 @@ static bool sortBySimilarity(const std::pair<std::string, double> &a,
 }
 
 /**
- * sorts the given map by value
- * @param m the map to sort
+ * sorts the given unordered_map by value
+ * @param m the unordered_map to sort
  * @return a vector with pairs after we sorted
  */
-static std::vector<std::pair<std::string, double>> sortByValue(const std::map<std::string, double> &m)
+static std::vector<std::pair<std::string, double>> sortByValue(const std::unordered_map<std::string, double> &m)
 {
-    std::vector<std::pair<std::string, double>> mapVector;
+    std::vector<std::pair<std::string, double>> unordered_mapVector;
     // Insert entries
     for (auto &iterator : m)
     {
-            mapVector.emplace_back(iterator);
+            unordered_mapVector.emplace_back(iterator);
     }
-    sort(mapVector.begin(), mapVector.end(), sortBySimilarity);
+    sort(unordered_mapVector.begin(), unordered_mapVector.end(), sortBySimilarity);
 
-    return mapVector;
+    return unordered_mapVector;
 }
 
 /**
- * finds the k largest values in the given map
- * @param similarity the map to find the k biggest values
+ * finds the k largest values in the given unordered_map
+ * @param similarity the unordered_map to find the k biggest values
  * @param k the number of k biggest
- * @return the map with k biggest
+ * @return the unordered_map with k biggest
  */
-static std::map<std::string, double> getKlargest(std::map<std::string, double> &similarity, int k)
+static std::unordered_map<std::string, double> getKlargest(std::unordered_map<std::string, double> &similarity, int k)
 {
     std::vector<std::pair<std::string, double>> sim;
-    std::map<std::string, double> kBiggest = {};
+    std::unordered_map<std::string, double> kBiggest = {};
     sim = sortByValue(similarity);
 
     size_t iterations = 0;
@@ -434,7 +436,7 @@ static std::map<std::string, double> getKlargest(std::map<std::string, double> &
  * @param name name of the suer
  * @return double with the score of the movie
  */
-double RecommenderSystem::_movieScore(std::map<std::string, double> kLargest, std::string &name)
+double RecommenderSystem::_movieScore(const std::unordered_map<std::string, double> &kLargest, const std::string &name)
 {
     double numerator = 0;
     double denominator = 0;
@@ -462,9 +464,9 @@ double RecommenderSystem::_movieScore(std::map<std::string, double> kLargest, st
  * @param k number of movie to check with
  * @return the score given
  */
-double RecommenderSystem::_predictMovieScoreForUser(std::string &movieName, std::string &userName, const int k)
+double RecommenderSystem::_predictMovieScoreForUser(std::string &movieName, std::string &userName, int k)
 {
-    std::map<std::string, double> movieSimilarity = _getMoviesSimilarity(movieName, userName);
+    std::unordered_map<std::string, double> movieSimilarity = _getMoviesSimilarity(movieName, userName);
     movieSimilarity = getKlargest(movieSimilarity, k);
     return _movieScore(movieSimilarity, userName);
 }
@@ -491,7 +493,7 @@ double RecommenderSystem::predictMovieScoreForUser(std::string movieName, std::s
  * @param k k movie to check withthe movie recommended
  * @return the movie recommended
  */
-std::string RecommenderSystem::recommendByCF(std::string userName, int k)
+std::string RecommenderSystem::recommendByCF(const std::string &userName, int k)
 {
     if (_userRank.find(userName) == _userRank.end())
     {

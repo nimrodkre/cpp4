@@ -19,7 +19,7 @@
 #ifndef CPP4_RECOMMENDERSYSTEM_H
 #define CPP4_RECOMMENDERSYSTEM_H
 
-#include <map>
+#include <unordered_map>
 #include <map>
 #include <vector>
 #include <unordered_set>
@@ -50,14 +50,17 @@ class RecommenderSystem
 {
 private:
     /**
-     * map with movie and all of its charactersitics
+     * unordered_map with movie and all of its charactersitics
      */
-    std::map<std::string, std::vector<double>> _moviesChar;
+    std::unordered_map<std::string, std::vector<double>> _moviesChar;
     /**
-     * map with name of the user and vector with all of his ranks for movie
+     * unordered_map with name of the user and vector with all of his ranks for movie
      */
-    std::map<std::string, std::vector<userMovieRank>> _userRank;
-
+    std::unordered_map<std::string, std::vector<userMovieRank>> _userRank;
+    /**
+     * holds map with all of the movies and their normal
+     */
+    std::unordered_map<std::string, double> _movieNormal;
     /**
     * Reads the given movie paths to our data structure
     * @param moviesAttributesFilePath path to the file
@@ -80,9 +83,9 @@ private:
      * finds the movies most similiar for the user and the movie
      * @param movieName the movie to check
      * @param name the user
-     * @return a map with the movie and similarity to the given movie name
+     * @return a unordered_map with the movie and similarity to the given movie name
      */
-    std::map<std::string, double> _getMoviesSimilarity(std::string &movieName, std::string name);
+    std::unordered_map<std::string, double> _getMoviesSimilarity(const std::string &movieName, const std::string &name);
     /**
      * predicts the movie score for the user
      * @param movieName the movie name
@@ -97,7 +100,24 @@ private:
      * @param name name of the suer
      * @return double with the score of the movie
      */
-    double _movieScore(std::map<std::string, double> kLargest, std::string &name);
+    double _movieScore(const std::unordered_map<std::string, double> &kLargest, const std::string &name);
+    /**
+    * calculates the similarity of the 2 vectors according to the equation given
+    * @param vec1 the first vector
+    * @param vec2 the second vector
+    * @return the similarity
+    */
+    double _getSimilarity(const std::vector<double> &vec1, const std::vector<double> &vec2, const std::string &movie);
+    /**
+     * finds the recommended movies for the user from the given data
+     * @param userPref the users preferences
+     * @param movies the movies
+     * @param userRank the ranks of the user
+     * @return the movie recommended
+     */
+    std::string _getMovieRecommended(const std::vector<double> &userPref,
+                                     std::unordered_map<std::string, std::vector<double>> &movies,
+                                     const std::vector<userMovieRank> &userRank);
 public:
     /**
      * in charge of loading user data
@@ -105,7 +125,7 @@ public:
      * @param userRanksFilePath
      * @return
      */
-    int loadData(std::string moviesAttributesFilePath, std::string userRanksFilePath);
+    int loadData(const std::string &moviesAttributesFilePath, const std::string &userRanksFilePath);
     /**
      * finds the recommended movie for the user
      * @param userName the user name to check
@@ -119,14 +139,14 @@ public:
      * @param k number of movie to check with
      * @return the score given
      */
-    double predictMovieScoreForUser(std::string movieName, std::string userName, const int k);
+    double predictMovieScoreForUser(std::string movieName, std::string userName, int k);
     /**
      * finds the recommended movie according to the CH algorithm
      * @param userName the user name of the wanted person who wants recommendation
      * @param k k movie to check withthe movie recommended
      * @return the movie recommended
      */
-    std::string recommendByCF(std::string userName, int k);
+    std::string recommendByCF(const std::string &userName, int k);
 };
 
 
