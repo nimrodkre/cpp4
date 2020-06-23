@@ -413,7 +413,7 @@ std::unordered_map<std::string, double> RecommenderSystem::_getMoviesSimilarity(
 static bool sortBySimilarity(const std::pair<std::string, double> &a,
                              const std::pair<std::string, double> &b)
 {
-    return (a.second < b.second);
+    return (a.second > b.second);
 }
 
 /**
@@ -435,32 +435,6 @@ static std::vector<std::pair<std::string, double>> sortByValue(const std::unorde
 }
 
 /**
- * finds the k largest values in the given unordered_map
- * @param similarity the unordered_map to find the k biggest values
- * @param k the number of k biggest
- * @return the unordered_map with k biggest
- */
-static std::unordered_map<std::string, double> getKlargest(std::unordered_map<std::string, double> &similarity, int k)
-{
-    std::vector<std::pair<std::string, double>> sim;
-    std::unordered_map<std::string, double> kBiggest = {};
-    sim = sortByValue(similarity);
-
-
-    size_t iterations = 0;
-    for (auto it = sim.begin(); it != sim.end(); it++)
-    {
-        if (iterations >= sim.size() - k)
-        {
-            kBiggest.insert({it->first, it->second});
-
-        }
-        iterations++;
-    }
-    return kBiggest;
-}
-
-/**
  * finds the score of the movie according to the algorithm of the targil
  * @param kLargest k movies to check with
  * @param name name of the suer
@@ -470,13 +444,13 @@ double RecommenderSystem::_movieScore(const std::unordered_map<std::string, doub
 {
     double numerator = 0;
     double denominator = 0;
-    size_t iterations = 0;
     std::vector<std::pair<std::string, double>> sim;
     sim = sortByValue(similarity);
 
+    int iterations = 0;
     for (auto &it : sim)
     {
-        if (iterations >= sim.size() - k)
+        if (iterations < k)
         {
             numerator += it.second * _userRankMap[name][it.first];
             denominator += it.second;
@@ -494,26 +468,14 @@ double RecommenderSystem::_movieScore(const std::unordered_map<std::string, doub
  * @param k number of movie to check with
  * @return the score given
  */
-double RecommenderSystem::_predictMovieScoreForUser(std::string &movieName, std::string &userName, int k)
-{
-    std::unordered_map<std::string, double> movieSimilarity = _getMoviesSimilarity(movieName, userName);
-    return _movieScore(movieSimilarity, userName, k);
-}
-
-/**
- * predicts the movie score for the user
- * @param movieName the movie name
- * @param userName the name of the user
- * @param k number of movie to check with
- * @return the score given
- */
-double RecommenderSystem::predictMovieScoreForUser(std::string movieName, std::string userName, const int k)
+double RecommenderSystem::predictMovieScoreForUser(const std::string &movieName, const std::string &userName, int k)
 {
     if (_userRank.find(userName) == _userRank.end() || _moviesChar.find(movieName) == _moviesChar.end())
     {
         return FAIL;
     }
-    return _predictMovieScoreForUser(movieName, userName, k);
+    std::unordered_map<std::string, double> movieSimilarity = _getMoviesSimilarity(movieName, userName);
+    return _movieScore(movieSimilarity, userName, k);
 }
 
 /**

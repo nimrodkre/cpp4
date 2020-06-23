@@ -60,7 +60,7 @@ private:
     /**
      * unordered_map with name of the user and movie map to the movie. Gives better execution time in 1 function
      */
-    std::unordered_map<std::string, std::map<std::string, double>> _userRankMap;
+    std::unordered_map<std::string, std::unordered_map<std::string, double>> _userRankMap;
     /**
      * holds map with all of the movies and their normal
      */
@@ -94,14 +94,6 @@ private:
      * @return a unordered_map with the movie and similarity to the given movie name
      */
     std::unordered_map<std::string, double> _getMoviesSimilarity(const std::string &movieName, const std::string &name);
-    /**
-     * predicts the movie score for the user
-     * @param movieName the movie name
-     * @param userName the name of the user
-     * @param k number of movie to check with
-     * @return the score given
-     */
-    double _predictMovieScoreForUser(std::string &movieName, std::string &userName, int k);
     /**
      * finds the score of the movie according to the algorithm of the targil
      * @param kLargest k movies to check with
@@ -147,7 +139,7 @@ public:
      * @param k number of movie to check with
      * @return the score given
      */
-    double predictMovieScoreForUser(std::string movieName, std::string userName, int k);
+    double predictMovieScoreForUser(const std::string &movieName, const std::string &userName, int k);
     /**
      * finds the recommended movie according to the CH algorithm
      * @param userName the user name of the wanted person who wants recommendation
