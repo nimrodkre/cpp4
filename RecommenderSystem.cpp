@@ -100,7 +100,7 @@ int RecommenderSystem::_readMovies(char const *moviesAttributesFilePath)
             }
             else
             {
-                double num = atof(s.c_str());
+                double num = std::stod(s);
                 normal += std::pow(num, 2);
                 characteristics.push_back(num);
             }
@@ -173,7 +173,7 @@ int RecommenderSystem::_readUserRanks(char const *userRanksFilePath)
                 }
                 else
                 {
-                    movieRank.rank = atof(s.c_str());
+                    movieRank.rank = std::stod(s);
                 }
                 this->_userRankMap[name][movieRank.movie] = movieRank.rank;
                 movieRanks.push_back(movieRank);
