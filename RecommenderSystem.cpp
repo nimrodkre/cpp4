@@ -79,7 +79,7 @@ int RecommenderSystem::_readMovies(char const *moviesAttributesFilePath)
     std::ifstream fs(moviesAttributesFilePath);
     fs = std::ifstream(moviesAttributesFilePath);
 
-    if (!fs || !fs.is_open())
+    if (!fs || !fs.is_open() || !fs.good())
     {
         return FAIL;
     }
@@ -143,7 +143,7 @@ int RecommenderSystem::_readUserRanks(char const *userRanksFilePath)
     std::ifstream fs(userRanksFilePath);
     fs = std::ifstream(userRanksFilePath);
 
-    if (!fs || !fs.is_open())
+    if (!fs || !fs.is_open() || !fs.good())
     {
         return FAIL;
     }
