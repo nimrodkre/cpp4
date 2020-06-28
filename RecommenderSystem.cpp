@@ -85,6 +85,7 @@ int RecommenderSystem::_readMovies(char const *moviesAttributesFilePath)
     }
 
     std::string line;
+    // run each line
     while (std::getline(fs, line))
     {
         std::istringstream iss(line);
@@ -92,6 +93,7 @@ int RecommenderSystem::_readMovies(char const *moviesAttributesFilePath)
         std::string movieName;
         std::vector<double> characteristics;
         double normal = 0;
+        // run for each word in a line with space between them
         for (std::string s; iss >> s; )
         {
             if (iteration == 0)
@@ -175,7 +177,7 @@ int RecommenderSystem::_readUserRanks(char const *userRanksFilePath)
                 {
                     movieRank.rank = std::stod(s);
                 }
-                this->_userRankMap[name][movieRank.movie] = movieRank.rank;
+                this->_MovieRanks[name][movieRank.movie] = movieRank.rank;
                 movieRanks.push_back(movieRank);
             }
             iteration++;
@@ -224,7 +226,8 @@ static double normal(const std::vector<double> &vec)
  * @param vec2 the second vector
  * @return the similarity
  */
-double RecommenderSystem::_getSimilarity(const std::vector<double> &vec1, const std::vector<double> &vec2, const std::string &movie)
+double RecommenderSystem::_getSimilarity(const std::vector<double> &vec1, const std::vector<double> &vec2,
+                                         const std::string &movie)
 {
     double curVal = dotProduct(vec1, vec2);
     curVal /= (normal(vec1) * _movieNormal[movie]);
@@ -337,7 +340,6 @@ std::string RecommenderSystem::_getContentRecommendation(const std::string &name
 {
     std::unordered_map<std::string, std::vector<double>> movies = _moviesChar;
     std::vector<userMovieRank> userRank = _userRank[name];
-
     userRank = normalizeUser(userRank);
     std::vector<double> userPref = getUserPreference(userRank, movies);
     return _getMovieRecommended(userPref, movies, userRank);
@@ -359,12 +361,18 @@ std::string RecommenderSystem::recommendByContent(const std::string &userName)
 }
 
 /**
- * finds the movies most similiar for the user and the movie
+ * finds the movies most similiar for the user and the movie.
+ * We want to save the angle between movies as they are constant for the full run of the
+ * program.
+ * So if we haven't calculated the angle, than we will have to calculate and enter it to our map
+ * with saved angles.
+ * If it was calculated already, than just take it out of the map
  * @param movieName the movie to check
  * @param name the user
  * @return a unordered_map with the movie and similarity to the given movie name
  */
-std::unordered_map<std::string, double> RecommenderSystem::_getMoviesSimilarity(const std::string &movieName, const std::string &name)
+std::unordered_map<std::string, double> RecommenderSystem::_getMoviesSimilarity(const std::string &movieName,
+                                                                                const std::string &name)
 {
     std::vector<userMovieRank> userRank = _userRank[name];
     std::unordered_map<std::string, double> similarity = {};
@@ -440,7 +448,8 @@ static std::vector<std::pair<std::string, double>> sortByValue(const std::unorde
  * @param name name of the suer
  * @return double with the score of the movie
  */
-double RecommenderSystem::_movieScore(const std::unordered_map<std::string, double> &similarity, const std::string &name, int k)
+double RecommenderSystem::_movieScore(const std::unordered_map<std::string, double> &similarity,
+                                      const std::string &name, int k)
 {
     double numerator = 0;
     double denominator = 0;
@@ -448,11 +457,12 @@ double RecommenderSystem::_movieScore(const std::unordered_map<std::string, doub
     sim = sortByValue(similarity);
 
     int iterations = 0;
+    // final calculation for the movie score
     for (auto &it : sim)
     {
         if (iterations < k)
         {
-            numerator += it.second * _userRankMap[name][it.first];
+            numerator += it.second * _MovieRanks[name][it.first];
             denominator += it.second;
         }
 
@@ -493,6 +503,7 @@ std::string RecommenderSystem::recommendByCF(const std::string &userName, int k)
 
     std::string bestMovie;
     double bestMovieScore = INT8_MIN;
+    // predict movie for all of the NA and check the maximum
     for (size_t i = 0; i < _userRank[userName].size(); i++)
     {
         if (_userRank[userName][i].rank == NA_VALUE)

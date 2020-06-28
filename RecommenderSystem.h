@@ -56,10 +56,6 @@ private:
      */
     std::unordered_map<std::string, std::vector<userMovieRank>> _userRank;
     /**
-     * unordered_map with name of the user and movie map to the movie. Gives better execution time in 1 function
-     */
-    std::unordered_map<std::string, std::unordered_map<std::string, double>> _userRankMap;
-    /**
      * holds map with all of the movies and their normal
      */
     std::unordered_map<std::string, double> _movieNormal;
@@ -68,10 +64,15 @@ private:
      */
     std::unordered_map<std::string, std::unordered_map<std::string, double>> _anglesBetweenMovies;
     /**
+     * unordered_map with name of the user and movie map to the movie
+     */
+    std::unordered_map<std::string, std::unordered_map<std::string, double>> _MovieRanks;
+    /**
     * Reads the given movie paths to our data structure
     * @param moviesAttributesFilePath path to the file
     * @return fail to success
     */
+
     int _readMovies(char const* moviesAttributesFilePath);
     /**
      * reads the users ranks from the given file path
