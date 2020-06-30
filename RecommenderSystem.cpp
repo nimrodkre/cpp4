@@ -120,7 +120,7 @@ int RecommenderSystem::_readMovies(char const *moviesAttributesFilePath)
  * @param fs stream of data from file
  * @return vector with all of the movies
  */
-static std::vector<std::string> getMovies(std::ifstream &fs)
+std::vector<std::string> RecommenderSystem::getMovies(std::ifstream &fs)
 {
     std::string line;
     std::vector<std::string> movieList;
@@ -195,7 +195,7 @@ int RecommenderSystem::_readUserRanks(char const *userRanksFilePath)
  * @param vec2 vector 2
  * @return the dot product of both
  */
-static double dotProduct(const std::vector<double> &vec1, const std::vector<double> &vec2)
+double RecommenderSystem::dotProduct(const std::vector<double> &vec1, const std::vector<double> &vec2)
 {
     double sum = 0;
     for (size_t i = 0; i < vec1.size(); i++)
@@ -210,7 +210,7 @@ static double dotProduct(const std::vector<double> &vec1, const std::vector<doub
  * @param vec the vector to normalize
  * @return the normal of the vector
  */
-static double normal(const std::vector<double> &vec)
+double RecommenderSystem::normal(const std::vector<double> &vec)
 {
     double sum = 0;
     for (auto num: vec)
@@ -239,7 +239,7 @@ double RecommenderSystem::_getSimilarity(const std::vector<double> &vec1, const 
  * @param userRank the users ranks
  * @return new vector with the given ranks
  */
-static std::vector<userMovieRank> &normalizeUser(std::vector<userMovieRank> &userRank)
+std::vector<userMovieRank> &RecommenderSystem::normalizeUser(std::vector<userMovieRank> &userRank)
 {
     double sum = 0;
     int num = 0;
@@ -268,8 +268,9 @@ static std::vector<userMovieRank> &normalizeUser(std::vector<userMovieRank> &use
  * @param movies the movies
  * @return all of the users preferences
  */
-static std::vector<double>
-getUserPreference(std::vector<userMovieRank> &userRank, std::unordered_map<std::string, std::vector<double>> movies)
+std::vector<double> RecommenderSystem::getUserPreference(std::vector<userMovieRank> &userRank,
+                                                         std::unordered_map<std::string,
+                                                         std::vector<double>> movies)
 {
     // holds the vectors after multiplied by the scalar of the rank
     std::vector<std::vector<double>> userPref;
@@ -418,8 +419,8 @@ std::unordered_map<std::string, double> RecommenderSystem::_getMoviesSimilarity(
  * @param b second pair
  * @return how to sort them
  */
-static bool sortBySimilarity(const std::pair<std::string, double> &a,
-                             const std::pair<std::string, double> &b)
+bool RecommenderSystem::sortBySimilarity(const std::pair<std::string, double> &a,
+                                         const std::pair<std::string, double> &b)
 {
     return (a.second > b.second);
 }
@@ -429,7 +430,8 @@ static bool sortBySimilarity(const std::pair<std::string, double> &a,
  * @param m the unordered_map to sort
  * @return a vector with pairs after we sorted
  */
-static std::vector<std::pair<std::string, double>> sortByValue(const std::unordered_map<std::string, double> &m)
+std::vector<std::pair<std::string, double>>
+RecommenderSystem::sortByValue(const std::unordered_map<std::string, double> &m)
 {
     std::vector<std::pair<std::string, double>> unordered_mapVector;
     // Insert entries
@@ -465,7 +467,10 @@ double RecommenderSystem::_movieScore(const std::unordered_map<std::string, doub
             numerator += it.second * _MovieRanks[name][it.first];
             denominator += it.second;
         }
-
+        else
+		{
+			break;
+		}
         iterations++;
     }
     return numerator / denominator;

@@ -117,6 +117,53 @@ private:
     std::string _getMovieRecommended(const std::vector<double> &userPref,
                                      std::unordered_map<std::string, std::vector<double>> &movies,
                                      const std::vector<userMovieRank> &userRank);
+    /**
+     * builds a vector with all of the movies from the given stream
+     * @param fs stream of data from file
+     * @return vector with all of the movies
+     */
+    static std::vector<std::string> getMovies(std::ifstream &fs);
+    /**
+     * dot product of the given vectors
+     * @param vec1 vector 1
+     * @param vec2 vector 2
+     * @return the dot product of both
+     */
+    static double dotProduct(const std::vector<double> &vec1, const std::vector<double> &vec2);
+    /**
+     * calculates the normal of the given vector
+     * @param vec the vector to normalize
+     * @return the normal of the vector
+     */
+    static double normal(const std::vector<double> &vec);
+    /**
+     * normalizes all of the users ranks, according the first step of the given algorithm in 3.2
+     * @param userRank the users ranks
+     * @return new vector with the given ranks
+     */
+    static std::vector<userMovieRank> &normalizeUser(std::vector<userMovieRank> &userRank);
+    /**
+     * calculates users preference
+     * @param userRank the users ranks
+     * @param movies the movies
+     * @return all of the users preferences
+     */
+    static std::vector<double> getUserPreference(std::vector<userMovieRank> &userRank,
+                                                 std::unordered_map<std::string,
+                                                 std::vector<double>> movies);
+    /**
+     * function to help our sort
+     * @param a first pair
+     * @param b second pair
+     * @return how to sort them
+     */
+    static bool sortBySimilarity(const std::pair<std::string, double> &a, const std::pair<std::string, double> &b);
+    /**
+     * sorts the given unordered_map by value
+     * @param m the unordered_map to sort
+     * @return a vector with pairs after we sorted
+     */
+    static std::vector<std::pair<std::string, double>> sortByValue(const std::unordered_map<std::string, double> &m);
 public:
     /**
      * in charge of loading user data
